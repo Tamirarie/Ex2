@@ -15,6 +15,10 @@ EX2 is a project that focus on detailed and accurate planning of library program
 
 ### Part 1:
 
+
+##Resources:
+http://deanandara.com/Argonaut/Sensors/Gps/Scripts.html
+
 ## Authors:
 * Raphael Zanzouri
 * Tamir Arie
