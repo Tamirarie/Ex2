@@ -2,10 +2,11 @@
 import csv
 from datetime import datetime
 import math
+##from test import INPUT_FILENAME
 
 # adapt this to your file
-INPUT_FILENAME = 'stockholm_walk.nmea'
-OUTPUT_FILENAME = 'out.csv'
+INPUT_FILENAME = 'NMEAfiles\stockholm_walk.nmea'
+OUTPUT_FILENAME = INPUT_FILENAME + '.csv'
 
 # open the input file in read mode
 with open(INPUT_FILENAME, 'r') as input_file:
@@ -20,7 +21,7 @@ with open(INPUT_FILENAME, 'r') as input_file:
         writer = csv.writer(output_file, delimiter=',', lineterminator='\n')
 
         # write the header line to the csv file
-        writer.writerow(['date_and_time', 'lat', 'lon', 'speed'])
+        writer.writerow(['date_and_time', 'lat','lat_direction', 'lon','lon_direction', 'speed'])
 
         # iterate over all the rows in the nmea file
         for row in reader:
@@ -71,4 +72,4 @@ with open(INPUT_FILENAME, 'r') as input_file:
                 speed = int(round(float(speed) * 1.852, 0))
 
                 # write the calculated/formatted values of the row that we just read into the csv file
-                writer.writerow([date_and_time, lat, lon, speed])
+                writer.writerow([date_and_time, lat,lat_direction, lon,lon_direction ,speed])

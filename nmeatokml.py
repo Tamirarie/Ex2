@@ -21,6 +21,7 @@ import nmeagram
 
 KML_EXT = ".kml"
 
+
 KML_TEMPLATE = \
 """<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://earth.google.com/kml/2.0">
@@ -37,6 +38,9 @@ KML_TEMPLATE = \
     <styleUrl>#dwhStyle000</styleUrl>
     <MultiGeometry>
       <LineString>
+        <TimeStamp>
+            <when></when>
+        </TimeStamp>
         <coordinates>
         %s
         </coordinates>
@@ -56,6 +60,8 @@ def nmeaFileToCoords(f):
     for line in f.readlines():
         if line[:6] in ("$GPGGA", "$GPGLL"):
             nmeagram.parseLine(line)
+            data.append(str(nmeagram.getField("UtcTime")))
+            data.append(",")
             data.append(str(nmeagram.getField("Longitude")))
             data.append(",")
             data.append(str(nmeagram.getField("Latitude")))
@@ -72,7 +78,7 @@ def main():
     elif len(sys.argv) == 2:
 
         # The input file should exist
-        fn = sys.argv[1]
+        fn = "NMEAfiles\stockholm_walk.nmea"
         assert os.path.exists(fn)
 
         # Create the KML output file

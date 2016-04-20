@@ -22,9 +22,6 @@ This module parses these 6 common NMEA sentence types:
 """
 
 
-import string
-
-
 # This dict holds the global parsed data
 data = {}
 
