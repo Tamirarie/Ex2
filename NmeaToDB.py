@@ -152,7 +152,7 @@ def nmeaGGA(INPUT,TableName):
                 if isinstance( lon, ( int, float )):
                     lon = round(math.floor(float(lon) / 100) + (float(lon) % 100) / 60, 6)
                     if lon_direction == 'W':
-                       lon = lon * -1
+                        lon = lon * -1
                 
                 # Insert a row of data
                 c.execute("INSERT INTO " + str(list[0]) + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
@@ -169,14 +169,11 @@ def nmeaGGA(INPUT,TableName):
         conn.close()
 
 def read_dir(dir_name):
-    global total
-    i = 'a'
     if os.path.isdir(dir_name):
         l = os.listdir(dir_name)
         for k in range(len(l)):
-            ##sif ".nmea" in l[i]:
                 nmeaGGA(dir_name + "\\"+l[k],l[k])
-                i = i+'1'
+                
                 
 
 
