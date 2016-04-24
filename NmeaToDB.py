@@ -18,92 +18,102 @@ def Createdate(value):
     dateval = "20"+year+"-"+month+"-"+day+"T"
     return dateval
 
-def nmeaRMC(INPUT,TableName):
-    conn = sqlite3.connect('example.db')
-    c = conn.cursor()
-    # Create table
-    l = str(TableName)
-    list = l.split(sep='.')
-    ## at the current we only create a table of nmeaRMC type
-    c.execute('drop table if exists ' + str(list[0]) )
-    c.execute('''CREATE TABLE '''+ str(list[0]) +'''
-             (time text,warning text,latitude text,north text,
-             longitude text,east text,
-             speed text, date text )''')
-    with open(INPUT, 'r') as input_file:
-        reader = csv.reader(input_file)
-        # iterate over all the rows in the nmea file
-        for row in reader:
+def getRMCdata(row):
+    warning = row[2]
+    if warning == 'V':
+        return
+   # time = row[1]
+    speed = row[7]
+    date =  row[9]
+    date = Createdate(date)
+    # merge the time and date columns into one Python datetime object (usually more convenient than having both separately)
+    # date_and_time = datetime.strptime(date + ' ' + time, '%d%m%y %H%M%S.%f')
 
-            # skip all lines that do not start with $GPRMC
-            if not row[0].startswith('$GPRMC'):
-                continue
+    # convert the Python datetime into your preferred string format, see http://www.tutorialspoint.com/python/time_strftime.htm for futher possibilities
+    #   date_and_time = date_and_time.strftime('%y-%m-%d %H:%M:%S.%f')[:-3] # [:-3] cuts off the last three characters (trailing zeros from the fractional seconds)
+    # speed is given in knots, you'll probably rather want it in km/h and rounded to full integer values.
+    # speed has to be converted from string to float first in order to do calculations with it.
+    # conversion to int is to get rid of the tailing ".0".
+    speed = int(round(float(speed) * 1.852, 0))
+    listRMC = [speed,date]
+    
+    return listRMC
 
-            else:
+def getGGAdata(row):
+    
+    time = row[1]
+    lat = row[2]
+    lat_direction = row[3]
+    lon = row[4]
+    lon_direction = row[5]
+    fix_quality = row[6]
+    numOfSat = row[7]
+    hdop = row[8]
+    altitude = row[9]
+    meters =  row[10]
+    heightofGeoid = row[11]
+    
+    time = Createtime(time)
+    # lat and lon values in the $GPRMC nmea sentences come in an rather uncommon format. for convenience, convert them into the commonly used decimal degree format which most applications can read.
+    # the "high level" formula for conversion is: DDMM.MMMMM => DD + (YY.ZZZZ / 60), multiplicated with (-1) if direction is either South or West
+    # the following reflects this formula in mathematical terms.
+    # lat and lon have to be converted from string to float in order to do calculations with them.
+    # you probably want the values rounded to 6 digits after the point for better readability.
+                
+                
+    if isinstance( lat, ( int, float )):
+                    lat = round(math.floor(float(lat) / 100) + (float(lat) % 100) / 60, 6)
+                    if lat_direction == 'S':
+                        lat = lat * -1
+                    
+    if isinstance( lon, ( int, float )):
+                    lon = round(math.floor(float(lon) / 100) + (float(lon) % 100) / 60, 6)
+                    if lon_direction == 'W':
+                        lon = lon * -1
+                        
+                        
+    listGGA = [time,lat,lat_direction,lon,lon_direction,fix_quality,numOfSat,hdop,altitude,meters,heightofGeoid]
+    return listGGA
 
-                # for each row, fetch the values from the row's columns
-                # columns that are not used contain technical GPS stuff that you are probably not interested in
-                time = row[1]
-                warning = row[2]
-                lat = row[3]
-                lat_direction = row[4]
-                lon = row[5]
-                lon_direction = row[6]
-                speed = row[7]
-                date =  row[9]
 
-                # if the "warning" value is "V" (void), you may want to skip it since this is an indicator for an incomplete data row)
-                if warning == 'V':
-                    continue
+def checkLine(line):                         # checkLine Function - Fix the line to start with '$'
+    if (line[0] != '$'):
+        j = 0
+        while line[j] != '$':
+            j = j + 1
+        line1 = line[j:]
+        return line1
+    return line
+def find_GA(list1,index):
+    while "GPGGA" not in list1[index] and index<len(list1)-2:
+        index=index+1
+    if index >= len(list1) - 1:
+        return -1
+    string=list1[index].split(",")
+    if (string[1]==''):
+        return find_GA(list1,index+1)
 
-                # merge the time and date columns into one Python datetime object (usually more convenient than having both separately)
-                date_and_time = datetime.strptime(date + ' ' + time, '%d%m%y %H%M%S.%f')
+    return index
+def findMC(list,index):
+    while "GPRMC" not in list[index] and index<len(list)-2:
+        index=index+1
+    if index>=len(list)-1:
+        return -1
+    str=list[index].split(",")
+    if (str[1]==''):
+        return find_GA(list,index+1)
+    return index
 
-                # convert the Python datetime into your preferred string format, see http://www.tutorialspoint.com/python/time_strftime.htm for futher possibilities
-                date_and_time = date_and_time.strftime('%y-%m-%d %H:%M:%S.%f')[:-3] # [:-3] cuts off the last three characters (trailing zeros from the fractional seconds)
-
-                # lat and lon values in the $GPRMC nmea sentences come in an rather uncommon format. for convenience, convert them into the commonly used decimal degree format which most applications can read.
-                # the "high level" formula for conversion is: DDMM.MMMMM => DD + (YY.ZZZZ / 60), multiplicated with (-1) if direction is either South or West
-                # the following reflects this formula in mathematical terms.
-                # lat and lon have to be converted from string to float in order to do calculations with them.
-                # you probably want the values rounded to 6 digits after the point for better readability.
-                lat = round(math.floor(float(lat) / 100) + (float(lat) % 100) / 60, 6)
-                if lat_direction == 'S':
-                    lat = lat * -1
-
-                lon = round(math.floor(float(lon) / 100) + (float(lon) % 100) / 60, 6)
-                if lon_direction == 'W':
-                    lon = lon * -1
-
-                # speed is given in knots, you'll probably rather want it in km/h and rounded to full integer values.
-                # speed has to be converted from string to float first in order to do calculations with it.
-                # conversion to int is to get rid of the tailing ".0".
-                speed = int(round(float(speed) * 1.852, 0))
-
-                # Insert a row of data
-                c.execute("INSERT INTO " + str(list[0]) + " VALUES (?,?,?,?,?,?,?,?)",
-                        (time,warning,lat,lat_direction,lon,lon_direction,speed,date)
-                        )
-
-            # Save (commit) the changes
-        conn.commit()
-
-        # We can also close the connection if we are done with it.
-        # Just be sure any changes have been committed or they will be lost.
-        conn.close()
-
-def is_comment(line):
-    return line.startswith('#')
 
 def nmeaGGA(INPUT,TableName):
     conn = sqlite3.connect('example.db')
     c = conn.cursor()
     l = str(TableName)
-    list = l.split(sep='.')
+    listName = l.split(sep='.')
     print(list)
     # Create table
-    c.execute('drop table if exists ' + str(list[0]) )
-    c.execute('''CREATE TABLE '''+ str(list[0]) + '''
+    c.execute('drop table if exists ' + str(listName[0]) )
+    c.execute('''CREATE TABLE '''+ str(listName[0]) + '''
              (time text,latitude text,north text,longitude text,east text,
              fix_quality text,numOfSat text,hdop text,altitude text,
             meters text, heightOfGeoid text, speed text, date text )''')
@@ -113,63 +123,31 @@ def nmeaGGA(INPUT,TableName):
         reader = csv.reader(input_file)
         # iterate over all the rows in the nmea file
         for row in reader:
-
-            # skip all lines that do not start with $GPRMC
-           ## if not row[0].startswith('$GPGGA'):
+            
+        # skip all lines that do not start with $GPRMC
+        ## if not row[0].startswith('$GPGGA'):
             if "RMC" in row[0]:
-                speed = row[7]
-                date = row[9]
-                date = Createdate(date)
-                
-            if "GGA" not in row[0] :
-                continue
-
-            else:
-                # for each row, fetch the values from the row's columns
-                # columns that are not used contain technical GPS stuff that you are probably not interested in
-                time = row[1]
-                lat = row[2]
-                lat_direction = row[3]
-                lon = row[4]
-                lon_direction = row[5]
-                fix_quality = row[6]
-                numOfSat = row[7]
-                hdop = row[8]
-                altitude = row[9]
-                meters =  row[10]
-                heightofGeoid = row[11]
-                speed =''
-                date = ''
-               
-
-
-                # merge the time and date columns into one Python datetime object (usually more convenient than having both separately)
-                ##date_and_time = datetime.strptime(time, '%H%M%S.%f')
-                time = Createtime(time)
-                # convert the Python datetime into your preferred string format, see http://www.tutorialspoint.com/python/time_strftime.htm for futher possibilities
-                
-                # lat and lon values in the $GPRMC nmea sentences come in an rather uncommon format. for convenience, convert them into the commonly used decimal degree format which most applications can read.
-                # the "high level" formula for conversion is: DDMM.MMMMM => DD + (YY.ZZZZ / 60), multiplicated with (-1) if direction is either South or West
-                # the following reflects this formula in mathematical terms.
-                # lat and lon have to be converted from string to float in order to do calculations with them.
-                # you probably want the values rounded to 6 digits after the point for better readability.
-                
-                if isinstance( lat, ( int, float )):
-                    lat = round(math.floor(float(lat) / 100) + (float(lat) % 100) / 60, 6)
-                    if lat_direction == 'S':
-                        lat = lat * -1
-                    
-                if isinstance( lon, ( int, float )):
-                    lon = round(math.floor(float(lon) / 100) + (float(lon) % 100) / 60, 6)
-                    if lon_direction == 'W':
-                        lon = lon * -1
-                
-                # Insert a row of data
-                c.execute("INSERT INTO " + str(list[0]) + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                        (time,lat,lat_direction,lon,lon_direction,fix_quality,
-                         numOfSat,hdop,altitude,meters,heightofGeoid,speed,
-                         date)
+                listRMC = getRMCdata(row)
+                if( listRMC!= None):
+                    c.execute("INSERT INTO " + str(listName[0]) + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                        (' ',' ',' ',' ',' ',' '
+                         ,' ',' ',' ',' ',' ',
+                         listRMC[0],listRMC[1])
                         )
+                
+            elif "GGA" in row[0] :
+                listGGA = getGGAdata(row)
+                c.execute("INSERT INTO " + str(listName[0]) + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                        (listGGA[0],listGGA[1],listGGA[2],listGGA[3],listGGA[4],listGGA[5],
+                         listGGA[6],listGGA[7],listGGA[8],listGGA[9],listGGA[10],
+                         '','')
+                        )
+            
+#             c.execute("INSERT INTO " + str(listName[0]) + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+#                         (listGGA[0],listGGA[1],listGGA[2],listGGA[3],listGGA[4],listGGA[5],
+#                          listGGA[6],listGGA[7],listGGA[8],listGGA[9],listGGA[10],
+#                          listRMC[0],listRMC[1])
+#                         )
 
         # Save (commit) the changes
         conn.commit()

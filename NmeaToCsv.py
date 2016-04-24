@@ -5,7 +5,7 @@ import math
 ##from test import INPUT_FILENAME
 
 # adapt this to your file
-INPUT_FILENAME = "USAsample2.nmea"
+INPUT_FILENAME = "NMEAfiles/stockholm_walk.nmea"
 OUTPUT_FILENAME = INPUT_FILENAME + ".csv"
 
 # open the input file in read mode
