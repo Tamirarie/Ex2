@@ -4,6 +4,9 @@ import csv
 from datetime import datetime
 import math
 
+def knots_to_kph(value):
+    return   str("%.2f" %(float(value)*1.85200)) +" km/h"
+
 def Createtime(value):
     hour = value[:2]
     minute = value[2:4]
@@ -22,7 +25,7 @@ def getRMCdata(row):
     warning = row[2]
     if warning == 'V':
         return
-   # time = row[1]
+    # time = row[1]
     speed = row[7]
     date =  row[9]
     date = Createdate(date)
@@ -41,6 +44,7 @@ def getRMCdata(row):
 
 def getGGAdata(row):
     
+ #   if(len(row)) != 11: return
     time = row[1]
     lat = row[2]
     lat_direction = row[3]
@@ -76,33 +80,6 @@ def getGGAdata(row):
     return listGGA
 
 
-def checkLine(line):                         # checkLine Function - Fix the line to start with '$'
-    if (line[0] != '$'):
-        j = 0
-        while line[j] != '$':
-            j = j + 1
-        line1 = line[j:]
-        return line1
-    return line
-def find_GA(list1,index):
-    while "GPGGA" not in list1[index] and index<len(list1)-2:
-        index=index+1
-    if index >= len(list1) - 1:
-        return -1
-    string=list1[index].split(",")
-    if (string[1]==''):
-        return find_GA(list1,index+1)
-
-    return index
-def findMC(list,index):
-    while "GPRMC" not in list[index] and index<len(list)-2:
-        index=index+1
-    if index>=len(list)-1:
-        return -1
-    str=list[index].split(",")
-    if (str[1]==''):
-        return find_GA(list,index+1)
-    return index
 
 
 def nmeaGGA(INPUT,TableName):
@@ -137,7 +114,8 @@ def nmeaGGA(INPUT,TableName):
                 
             elif "GGA" in row[0] :
                 listGGA = getGGAdata(row)
-                c.execute("INSERT INTO " + str(listName[0]) + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                if(listGGA != None):
+                    c.execute("INSERT INTO " + str(listName[0]) + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
                         (listGGA[0],listGGA[1],listGGA[2],listGGA[3],listGGA[4],listGGA[5],
                          listGGA[6],listGGA[7],listGGA[8],listGGA[9],listGGA[10],
                          '','')
