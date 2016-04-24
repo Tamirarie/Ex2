@@ -18,14 +18,15 @@ def Createdate(value):
     dateval = "20"+year+"-"+month+"-"+day+"T"
     return dateval
 
-def nmeaRMC(INPUT):
+def nmeaRMC(INPUT,TableName):
     conn = sqlite3.connect('example.db')
     c = conn.cursor()
     # Create table
-
+    l = str(TableName)
+    list = l.split(sep='.')
     ## at the current we only create a table of nmeaRMC type
-    c.execute('drop table if exists nmea' + str(INPUT))
-    c.execute('''CREATE TABLE IF NOT EXISTS nmeaRMC'''+ str(INPUT)+'''
+    c.execute('drop table if exists ' + str(list[0]) )
+    c.execute('''CREATE TABLE '''+ str(list[0]) +'''
              (time text,warning text,latitude text,north text,
              longitude text,east text,
              speed text, date text )''')
@@ -80,7 +81,7 @@ def nmeaRMC(INPUT):
                 speed = int(round(float(speed) * 1.852, 0))
 
                 # Insert a row of data
-                c.execute("INSERT INTO nmeaRMC VALUES (?,?,?,?,?,?,?,?)",
+                c.execute("INSERT INTO " + str(list[0]) + " VALUES (?,?,?,?,?,?,?,?)",
                         (time,warning,lat,lat_direction,lon,lon_direction,speed,date)
                         )
 
@@ -90,6 +91,9 @@ def nmeaRMC(INPUT):
         # We can also close the connection if we are done with it.
         # Just be sure any changes have been committed or they will be lost.
         conn.close()
+
+def is_comment(line):
+    return line.startswith('#')
 
 def nmeaGGA(INPUT,TableName):
     conn = sqlite3.connect('example.db')
@@ -102,7 +106,7 @@ def nmeaGGA(INPUT,TableName):
     c.execute('''CREATE TABLE '''+ str(list[0]) + '''
              (time text,latitude text,north text,longitude text,east text,
              fix_quality text,numOfSat text,hdop text,altitude text,
-            meters text, heightOfGeoid text, timeLU text, checkSum text )''')
+            meters text, heightOfGeoid text, speed text, date text )''')
     
     with open(INPUT, 'r') as input_file:
         print(input_file)
@@ -111,7 +115,13 @@ def nmeaGGA(INPUT,TableName):
         for row in reader:
 
             # skip all lines that do not start with $GPRMC
-            if not row[0].startswith('$GPGGA'):
+           ## if not row[0].startswith('$GPGGA'):
+            if "RMC" in row[0]:
+                speed = row[7]
+                date = row[9]
+                date = Createdate(date)
+                
+            if "GGA" not in row[0] :
                 continue
 
             else:
@@ -128,16 +138,16 @@ def nmeaGGA(INPUT,TableName):
                 altitude = row[9]
                 meters =  row[10]
                 heightofGeoid = row[11]
-                timeLU = row[12]
-                checkSum = row[13]
+                speed =''
+                date = ''
+               
 
 
                 # merge the time and date columns into one Python datetime object (usually more convenient than having both separately)
                 ##date_and_time = datetime.strptime(time, '%H%M%S.%f')
                 time = Createtime(time)
                 # convert the Python datetime into your preferred string format, see http://www.tutorialspoint.com/python/time_strftime.htm for futher possibilities
-                timeLU = Createdate(timeLU)
-
+                
                 # lat and lon values in the $GPRMC nmea sentences come in an rather uncommon format. for convenience, convert them into the commonly used decimal degree format which most applications can read.
                 # the "high level" formula for conversion is: DDMM.MMMMM => DD + (YY.ZZZZ / 60), multiplicated with (-1) if direction is either South or West
                 # the following reflects this formula in mathematical terms.
@@ -157,8 +167,8 @@ def nmeaGGA(INPUT,TableName):
                 # Insert a row of data
                 c.execute("INSERT INTO " + str(list[0]) + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
                         (time,lat,lat_direction,lon,lon_direction,fix_quality,
-                         numOfSat,hdop,altitude,meters,heightofGeoid,timeLU,
-                         checkSum)
+                         numOfSat,hdop,altitude,meters,heightofGeoid,speed,
+                         date)
                         )
 
         # Save (commit) the changes
