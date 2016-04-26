@@ -5,7 +5,7 @@ from datetime import datetime
 import math
 
 def knots_to_kph(value):
-    return   str("%.2f" %(float(value)*1.85200)) +" km/h"
+    return  str("%.2f" %(float(value)*1.85200)) +" km/h"
 
 def Createtime(value):
     hour = value[:2]

@@ -87,11 +87,11 @@ def DBtoKML(NameFile):
     fo = open(NameFile + KML_EXT, 'w')
     fo.write(KML_TEMPLATE % (NameFile, NameFile, nmeaFileToCoords(lines)))
     
-def create_kml(i):
+def create_kml(NameFile):
     skip=5
     database = sqlite3.connect('example.db')
-    pois = database.execute("SELECT * FROM " + str(i))
-    file = 'file' + str(i) + '.kml'
+    pois = database.execute("SELECT * FROM " + str(NameFile))
+    file = str(NameFile) + '.kml'
     FILE = open(file, 'w')
     FILE.truncate(0)
     FILE.write('<?xml version="1.0" encoding="iso-8859-1"?>\n')
@@ -103,13 +103,12 @@ def create_kml(i):
     j=0
     for poi in pois:
         if j%skip==0:
-            print('%s : %s, %s' % (poi, poi[2], poi[1],))
             FILE.write('<Placemark>\n')
             FILE.write('    <TimeStamp>\n')
             FILE.write('     <when>%s%s</when>\n' % (NmeaToDB.Createdate(poi[11]),NmeaToDB.Createtime(poi[0])))
             FILE.write('    </TimeStamp>\n')
-            lat = float(poi[2]) + (float(poi[2]) / 60)
-            lon = float(poi[4][:4]) + (float(poi[4][4:]) / 60)
+            lat = float(poi[1][:2]) + (float(poi[1][2:]) / 60)
+            lon = float(poi[3][:3]) + (float(poi[3][3:]) / 60)
             FILE.write('    <description><![CDATA[Lat: %s <br> Lon: %s<br> Speed: %s <br>]]></description>\n' % (lat, lon,(poi[10])))
             FILE.write('    <Point>\n')
 
@@ -126,4 +125,4 @@ def create_kml(i):
     database.close()    
 
 
-create_kml('stockholm_walk')
+create_kml('stockholmWalk')
