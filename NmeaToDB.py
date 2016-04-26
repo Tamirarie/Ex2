@@ -21,6 +21,26 @@ def Createdate(value):
     dateval = "20"+year+"-"+month+"-"+day+"T"
     return dateval
 
+def find_GA(list,index):
+    while "GPGGA" not in list[index] and index<len(list)-2:
+        index=index+1
+    if index >= len(list) - 1:
+        return -1
+    str=list[index].split(",")
+    if (str[1]==''):
+        return find_GA(list,index+1)
+
+    return index
+def findMC(list,index):
+    while "GPRMC" not in list[index] and index<len(list)-2:
+        index=index+1
+    if index>=len(list)-1:
+        return -1
+    str=list[index].split(",")
+    if (str[1]==''):
+        return find_GA(list,index+1)
+    return index
+
 def getRMCdata(row):
     warning = row[2]
     if warning == 'V':
@@ -85,60 +105,71 @@ def getGGAdata(row):
 def nmeaGGA(INPUT,TableName):
     conn = sqlite3.connect('example.db')
     c = conn.cursor()
-    l = str(TableName)
-    listName = l.split(sep='.')
-    print(list)
+ ##   print(list)
     # Create table
-    c.execute('drop table if exists ' + str(listName[0]) )
-    c.execute('''CREATE TABLE '''+ str(listName[0]) + '''
-             (time text,latitude text,north text,longitude text,east text,
-             fix_quality text,numOfSat text,hdop text,altitude text,
-            meters text, heightOfGeoid text, speed text, date text )''')
-    
+    c.execute('drop table if exists ' + TableName )
+##    c.execute('''CREATE TABLE '''+ TableName  + '''
+##             (time text,latitude text,north text,longitude text,east text,
+##             fix_quality text,numOfSat text,hdop text,altitude text,
+##            meters text, heightOfGeoid text, speed text, date text )''')
+    c.execute('''CREATE TABLE ''' + TableName + '''
+                (time text, latitude text,north text, longtitude text,
+                east text,quality text, nos text, hdop text, altitude text,
+                hog text,speed text,date text)''')
     with open(INPUT, 'r') as input_file:
         print(input_file)
-        reader = csv.reader(input_file)
-        # iterate over all the rows in the nmea file
-        for row in reader:
+        lists = input_file.readlines();
+        
+        index = 0
+        while index<len(lists)-1:             # Go over all the lines in the current file
+            index1 = find_GA(lists,index)     # Finding the next GPGGA line
+            if (index1==-1):                 # Checking if the GPGGA line is correct
+                break
+            line1 = checkLine(lists[index1])  # Fix line
+            index = index1+1
+            index2 = findMC(lists,index)      # Finding the next GPRMC line
+            if (index2 == -1):               # Checking if the GPRMC line is correct
+                break
+            line2 = checkLine(lists[index2])  # Fix line
+            index=index2+1
+            load_DB(line1, line2, TableName) 
             
-        # skip all lines that do not start with $GPRMC
-        ## if not row[0].startswith('$GPGGA'):
-            if "RMC" in row[0]:
-                listRMC = getRMCdata(row)
-                if( listRMC!= None):
-                    c.execute("INSERT INTO " + str(listName[0]) + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                        (' ',' ',' ',' ',' ',' '
-                         ,' ',' ',' ',' ',' ',
-                         listRMC[0],listRMC[1])
-                        )
-                
-            elif "GGA" in row[0] :
-                listGGA = getGGAdata(row)
-                if(listGGA != None):
-                    c.execute("INSERT INTO " + str(listName[0]) + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                        (listGGA[0],listGGA[1],listGGA[2],listGGA[3],listGGA[4],listGGA[5],
-                         listGGA[6],listGGA[7],listGGA[8],listGGA[9],listGGA[10],
-                         '','')
-                        )
-            
-#             c.execute("INSERT INTO " + str(listName[0]) + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
-#                         (listGGA[0],listGGA[1],listGGA[2],listGGA[3],listGGA[4],listGGA[5],
-#                          listGGA[6],listGGA[7],listGGA[8],listGGA[9],listGGA[10],
-#                          listRMC[0],listRMC[1])
-#                         )
-
-        # Save (commit) the changes
-        conn.commit()
-
-    # We can also close the connection if we are done with it.
-    # Just be sure any changes have been committed or they will be lost.
         conn.close()
-
+                
+        
+def checkLine(line):                         # checkLine Function - Fix the line to start with '$'
+    if (line[0] != '$'):
+        j = 0
+        while line[j] != '$':
+            j = j + 1
+        line1 = line[j:]
+        return line1
+    return line
+        
+def load_DB(str1,str2,NmeaFile):
+    list1=str1.split(",")
+    list2=str2.split(",")
+    ##if len(list1) == 15 and len(list2) == 15:
+    ##print(len(list1))
+  ##  print(len(list2))
+    conn = sqlite3.connect('example.db')
+    c = conn.cursor()
+        # Insert a row of data
+    
+    c.execute("INSERT INTO "+str(NmeaFile)+" VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",(list1[1], list1[2], list1[3], list1[4],list1[5], list1[6],list1[7], list1[8], list1[9], list1[10],list2[7],list2[9]))
+    conn.commit()
+    conn.close()
+    
 def read_dir(dir_name):
     if os.path.isdir(dir_name):
         l = os.listdir(dir_name)
         for k in range(len(l)):
-                nmeaGGA(dir_name + "\\"+l[k],l[k])
+            l2 = str(l[k])
+            listName = l2.split(sep='.')
+               ## nmeaGGA(dir_name + "\\"+l[k],l[k])
+            nmeaGGA(dir_name + "\\"+ str(listName[0]+".nmea") ,str(listName[0]))
+               
+               
                 
                 
 
