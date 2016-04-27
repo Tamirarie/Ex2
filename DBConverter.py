@@ -125,4 +125,4 @@ def create_kml(NameFile):
     database.close()    
 
 
-create_kml('stockholmWalk')
+##create_kml('stockholmWalk')
