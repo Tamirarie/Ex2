@@ -1,7 +1,6 @@
 import os.path
 import sqlite3
 import csv
-#from datetime import datetime
 import math
 
 def knots_to_kph(value):
@@ -139,14 +138,14 @@ def nmeaToDB(INPUT,TableName):
     conn.commit()
     conn.close()
                 
-    
+def load_dir():
+    read_dir('NMEAfiles')
 def read_dir(dir_name):
     if os.path.isdir(dir_name):
         l = os.listdir(dir_name)
         for k in range(len(l)):
             l2 = str(l[k])
             listName = l2.split(sep='.')
-            ## nmeaGGA(dir_name + "\\"+l[k],l[k])
             nmeaToDB(dir_name + "\\"+ str(listName[0]+".nmea") ,str(listName[0]))
                
                
@@ -155,16 +154,9 @@ def read_dir(dir_name):
 
 
 def dropAll():
-    conn = sqlite3.connect('example.db')
+    conn = sqlite3.connect('NMEA_DB.db')
     c = conn.cursor()
     tables = list(c.execute("select name from sqlite_master where type is 'table'"))
-
     c.executescript(';'.join(["drop table if exists %s" % i for i in tables]))    
     
-    
-INPUT = 'NMEAfiles'
-dropAll()
-#nmeaGGA(INPUT+"\FlightLog.nmea",'FlightLog')
-
-read_dir(INPUT)
 

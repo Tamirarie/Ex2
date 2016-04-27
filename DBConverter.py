@@ -1,7 +1,7 @@
 import csv
 import sqlite3
 import NmeaToDB
-
+import os.path
 """
 nmeatokml.py - Converts an NMEA data file to a KML track
 
@@ -16,9 +16,6 @@ for the KML track data set.
 :usage: nmeatokml.py nmeadatafilename
 :usage: nmeatokml.py < filename.nmea > filename.kml
 """
-
-import nmeagram
-
 
 KML_EXT = ".kml"
 
@@ -53,45 +50,24 @@ KML_TEMPLATE = \
 """
 
 
-def nmeaFileToCoords(lines):
-    """Read a file full of NMEA sentences and return a string of lat/lon/z
-    coordinates.  'z' is often 0.
-    """
-    data = []
-    for line in lines:
-        if line[:6] in ("$GPGGA", "$GPGLL"):
-            nmeagram.parseLine(line)
-            data.append(str(nmeagram.getField("UtcTime")))
-            data.append(",")
-            data.append(str(nmeagram.getField("Longitude")))
-            data.append(",")
-            data.append(str(nmeagram.getField("Latitude")))
-            data.append(",0 ")
-    return str.join('',data)  
 
-def DBtoCSV(NameFile):
-    conn = sqlite3.connect("example.db") #open db
+
+def FiletoCSV(NameFile):
+    conn = sqlite3.connect("NMEA_DB.db") #open db
     cursor = conn.cursor() #cursor to the db
     cursor.execute('select * from '+NameFile) # execute a sql script
 
-    with open(NameFile+".csv",'w', newline='') as csv_file: #writing to csv
+    with open('CSVfiles\\'+NameFile+".csv",'w', newline='') as csv_file: #writing to csv
         csv_writer = csv.writer(csv_file)
         csv_writer.writerow([i[0] for i in cursor.description]) # write headers
         csv_writer.writerows(cursor)
         
-def DBtoKML(NameFile):
-    conn = sqlite3.connect("example.db") #open db
-    cursor = conn.cursor() #cursor to the db
-    lines = cursor.execute('select * from '+NameFile) # execute a sql script
-
-    fo = open(NameFile + KML_EXT, 'w')
-    fo.write(KML_TEMPLATE % (NameFile, NameFile, nmeaFileToCoords(lines)))
     
-def create_kml(NameFile):
+def FiletoKML(NameFile):
     skip=5
-    database = sqlite3.connect('example.db')
+    database = sqlite3.connect('NMEA_DB.db')
     pois = database.execute("SELECT * FROM " + str(NameFile))
-    file = str(NameFile) + '.kml'
+    file = 'KMLfiles\\' + str(NameFile) + '.kml'
     FILE = open(file, 'w')
     FILE.truncate(0)
     FILE.write('<?xml version="1.0" encoding="iso-8859-1"?>\n')
@@ -105,7 +81,7 @@ def create_kml(NameFile):
         if j%skip==0:
             FILE.write('<Placemark>\n')
             FILE.write('    <TimeStamp>\n')
-            FILE.write('     <when>%s%s</when>\n' % (NmeaToDB.Createdate(poi[11]),NmeaToDB.Createtime(poi[0])))
+            FILE.write('     <when>%s%s</when>\n' % (poi[11],poi[0]))
             FILE.write('    </TimeStamp>\n')
             lat = float(poi[1][:2]) + (float(poi[1][2:]) / 60)
             lon = float(poi[3][:3]) + (float(poi[3][3:]) / 60)
@@ -124,5 +100,22 @@ def create_kml(NameFile):
     FILE.close()
     database.close()    
 
+def loadDBtoCSV():
+    DBtoCSV('NMEAfiles')
+def DBtoCSV(dir_name):
+    if os.path.isdir(dir_name):
+        l = os.listdir(dir_name)
+        for k in range(len(l)):
+            l2 = str(l[k])
+            listName = l2.split(sep='.')
+            FiletoCSV(str(listName[0]))
 
-##create_kml('stockholmWalk')
+def loadDBtoKML():
+    DBtoKML('NMEAfiles')            
+def DBtoKML(dir_name):
+    if os.path.isdir(dir_name):
+        l = os.listdir(dir_name)
+        for k in range(len(l)):
+            l2 = str(l[k])
+            listName = l2.split(sep='.')
+            FiletoKML(str(listName[0]))
