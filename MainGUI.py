@@ -3,10 +3,19 @@ import NmeaToDB
 import DBConverter
 import sqlite3
 from sqlite3 import OperationalError
-import datetime, time
+import os
+import time
 
+def showGoogleEarth():
+    if os.path.isdir('KMLfiles'):
+        l = os.listdir('KMLfiles')
+        for k in range(len(l)):
+            l2 = str(l[k])
+            os.startfile('KMLfiles\\'+l2)
+            time.sleep(5)
+    
 def OpenDB():
-    print()
+    os.startfile('NMEA_DB.db')
 ##################################
 
     
@@ -62,11 +71,11 @@ def executeScriptsFromFile():
     
  
         
-
+######################################################################
 
 root = tkinter.Tk()
-root.title("NMEA TO CSV PROGRAM")
-root.geometry("350x250")
+root.title("NMEA TO DB Program")
+root.geometry("400x400")
 app = tkinter.Frame(root)
 app.grid()
 
@@ -75,17 +84,19 @@ NmeaRunButton.pack()
 
 
 
-ConvertToCSVbutton = tkinter.Button(app , text = "Convert This NMEA to CSV!" , command = DBConverter.loadDBtoCSV)
+ConvertToCSVbutton = tkinter.Button(app , text = "Convert This DB to CSV!" , command = DBConverter.loadDBtoCSV)
 ConvertToCSVbutton.pack()
 
-ConvertToKMLbutton = tkinter.Button(app ,text = "Convert This NMEA to KML!"  , command = DBConverter.loadDBtoKML)
+ConvertToKMLbutton = tkinter.Button(app ,text = "Convert This DB to KML!"  , command = DBConverter.loadDBtoKML)
 ConvertToKMLbutton.pack()
 
-GoogleEbutton = tkinter.Button(app , text = "Show on Google Earth")
+GoogleEbutton = tkinter.Button(app , text = "Show on Google Earth",command = showGoogleEarth)
 GoogleEbutton.pack()
 
 QueryButton = tkinter.Button(app, text="Click To run Queries:", command = executeScriptsFromFile)
 QueryButton.pack()
 
+OpenDBbutton = tkinter.Button(app, text="Click To Open DB:", command = OpenDB)
+OpenDBbutton.pack()
 
 tkinter.mainloop()
