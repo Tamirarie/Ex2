@@ -1,6 +1,6 @@
 import csv
 import sqlite3
-import os.path
+import os.path,subprocess
 """
 nmeatokml.py - Converts an NMEA data file to a KML track
 
@@ -65,6 +65,8 @@ def FiletoCSV(NameFile):
         csv_writer.writerows(cursor)
         
     
+        
+    
 def FiletoKML(NameFile):
     skip=5
     database = sqlite3.connect('NMEA_DB.db')
@@ -107,6 +109,8 @@ def FiletoKML(NameFile):
 
 def loadDBtoCSV():
     DBtoCSV('NMEAfiles')
+    subprocess.call("explorer CSVfiles", shell = True)
+    
 def DBtoCSV(dir_name):
     if os.path.isdir(dir_name):
         l = os.listdir(dir_name)
@@ -116,7 +120,9 @@ def DBtoCSV(dir_name):
             FiletoCSV(str(listName[0]))
 
 def loadDBtoKML():
-    DBtoKML('NMEAfiles')            
+    DBtoKML('NMEAfiles')     
+    subprocess.call("explorer KMLfiles", shell = True)
+           
 def DBtoKML(dir_name):
     if os.path.isdir(dir_name):
         l = os.listdir(dir_name)
