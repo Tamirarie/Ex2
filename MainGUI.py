@@ -3,7 +3,7 @@ import NmeaToDB
 import DBConverter
 import sqlite3
 from sqlite3 import OperationalError
-import os
+import os,subprocess
 import time
 
 def showGoogleEarth():
@@ -15,7 +15,9 @@ def showGoogleEarth():
             time.sleep(5)
     
 def OpenDB():
-    os.startfile('NMEA_DB.db')
+    database = 'NMEA_DB.db'
+    sqlitebrowser = r'C:\Program Files\SqliteBrowser3\bin\sqlitebrowser.exe'
+    subprocess.Popen("%s %s" % (sqlitebrowser,database))
 ##################################
 
     
@@ -93,10 +95,16 @@ ConvertToKMLbutton.pack()
 GoogleEbutton = tkinter.Button(app , text = "Show on Google Earth",command = showGoogleEarth)
 GoogleEbutton.pack()
 
-QueryButton = tkinter.Button(app, text="Click To run Queries:", command = executeScriptsFromFile)
+QueryButton = tkinter.Button(app, text="Click To run Queries:\n (Opening Query.sql and creating QueryOut.txt)", command = executeScriptsFromFile)
 QueryButton.pack()
 
-OpenDBbutton = tkinter.Button(app, text="Click To Open DB:", command = OpenDB)
+OpenDBbutton = tkinter.Button(app, text="Click To Open DB:\n (only if having sqlitebrowser)", command = OpenDB)
 OpenDBbutton.pack()
 
+NmeaRunButton.config(height = '3', width = '50')
+ConvertToCSVbutton.config(height = '3', width = '50')
+ConvertToKMLbutton.config(height = '3', width = '50')
+GoogleEbutton.config(height = '3', width = '50')
+QueryButton.config(height = '3', width = '50')
+OpenDBbutton.config(height = '3', width = '50')
 tkinter.mainloop()
