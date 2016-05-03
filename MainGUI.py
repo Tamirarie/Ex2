@@ -6,6 +6,17 @@ from sqlite3 import OperationalError
 import os
 import time
 
+"""
+MainGUI.py - a program to present a nice UI using the methods
+of NmeaToDB.py and DBConverter
+
+:Author: Tamir Arie
+:Revision: 0.1
+:Date: 2016/05/03
+
+"""
+
+
 def showGoogleEarth():
     if os.path.isdir('KMLfiles'):
         l = os.listdir('KMLfiles')

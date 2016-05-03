@@ -3,6 +3,18 @@ import sqlite3
 import csv
 import math
 
+"""
+NmeaToDB.py - parse an NMEA data files to a database
+
+puts the fields of gga and rmc in lists and then
+put them in the tables
+
+:Author: Tamir Arie
+:Revision: 0.1
+:Date: 2016/05/03
+
+"""
+
 def knots_to_kph(value):
     return  str("%.2f" %(float(value)*1.85200)) +" km/h"
 

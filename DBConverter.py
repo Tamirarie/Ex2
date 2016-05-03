@@ -1,11 +1,12 @@
 import csv
 import sqlite3
-import NmeaToDB
 import os.path
-"""
-nmeatokml.py - Converts an NMEA data file to a KML track
 
-Uses lon/lat data fields from the NMEA sentences as location coordinates
+"""
+DBConverter.py - Converts an NMEA data file to a KML track or to csv file
+
+Uses lon/lat and time stamp data fields 
+from the NMEA sentences as location coordinates
 for the KML track data set.
 
 :Copyright: Copyright 2007 Dean Hall.  All rights reserved.
@@ -13,44 +14,7 @@ for the KML track data set.
 :Revision: 0.1
 :Date: 2007/12/10
 
-:usage: nmeatokml.py nmeadatafilename
-:usage: nmeatokml.py < filename.nmea > filename.kml
 """
-
-KML_EXT = ".kml"
-
-
-KML_TEMPLATE = \
-"""<?xml version="1.0" encoding="UTF-8"?>
-<kml xmlns="http://earth.google.com/kml/2.0">
-<Document>
-  <name>NMEA to KML: %s</name>
-  <Style id="dwhStyle000">
-    <LineStyle id="dwhLineStyleRed6">
-      <color>7f0000ff</color>
-      <width>6</width>
-    </LineStyle>
-  </Style>
-  <Placemark>
-    <name>%s</name>
-    <styleUrl>#dwhStyle000</styleUrl>
-    <MultiGeometry>
-      <LineString>
-        <TimeStamp>
-            <when></when>
-        </TimeStamp>
-        <coordinates>
-        %s
-        </coordinates>
-      </LineString>
-    </MultiGeometry>
-  </Placemark>
-</Document>
-</kml>
-"""
-
-
-
 
 def FiletoCSV(NameFile):
     conn = sqlite3.connect("NMEA_DB.db") #open db
@@ -100,8 +64,10 @@ def FiletoKML(NameFile):
     FILE.close()
     database.close()    
 
+
 def loadDBtoCSV():
     DBtoCSV('NMEAfiles')
+    
 def DBtoCSV(dir_name):
     if os.path.isdir(dir_name):
         l = os.listdir(dir_name)
@@ -110,8 +76,10 @@ def DBtoCSV(dir_name):
             listName = l2.split(sep='.')
             FiletoCSV(str(listName[0]))
 
+
 def loadDBtoKML():
-    DBtoKML('NMEAfiles')            
+    DBtoKML('NMEAfiles')   
+             
 def DBtoKML(dir_name):
     if os.path.isdir(dir_name):
         l = os.listdir(dir_name)
